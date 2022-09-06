@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:shopping_cart_app/screens/login.dart';
 import 'package:shopping_cart_app/themes/app_colors.dart';
 import 'package:shopping_cart_app/components/button_widget.dart';
 import 'package:shopping_cart_app/themes/app_colors.dart';
@@ -8,16 +9,15 @@ import 'package:flutter/material.dart';
 import 'package:shopping_cart_app/screens/product_list.dart';
 import 'package:shopping_cart_app/screens/product_detail.dart';
 import 'package:shopping_cart_app/screens/routes.dart';
-import 'package:shopping_cart_app/screens/signup.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+class SignPage extends StatefulWidget {
+  const SignPage({Key? key}) : super(key: key);
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignPage> createState() => _SignPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignPageState extends State<SignPage> {
   TextEditingController nameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
@@ -88,16 +88,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 8,),
-              TextButton(
-                onPressed: () {
-                  //forgot password screen
-                },
-                child: const Text('Forgot Password',),
-              ),
               const SizedBox(height: 4,),
               AppButton(
-                  buttonLabel: "Sign In",
+                  buttonLabel: "Sign Up",
                   onButtonTap: () => _doLogin()
               ),
               // onButtonTap: () {
@@ -108,10 +101,10 @@ class _LoginPageState extends State<LoginPage> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SignPage()),
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
                   );
                 },
-                child: const Text('Sign Up',),
+                child: const Text('Sign In',),
               ),
             ],
           ),

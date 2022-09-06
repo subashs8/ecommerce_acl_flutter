@@ -7,6 +7,9 @@ import 'package:shopping_cart_app/database/db_helper.dart';
 import 'package:shopping_cart_app/model/cart_model.dart';
 import 'package:shopping_cart_app/screens/cart_screen.dart';
 import 'package:shopping_cart_app/screens/constants.dart';
+import "dart:convert";
+import 'package:http/http.dart' as http;
+import 'package:shopping_cart_app/backend/parse_products.dart';
 
 class ProductList extends StatefulWidget {
   const ProductList({Key? key}) : super(key: key);
@@ -17,18 +20,38 @@ class ProductList extends StatefulWidget {
 
 class _ProductListState extends State<ProductList> {
   DBHelper dbHelper = DBHelper();
+  Products? productItems;
 
-  List<Item> products = [
-    Item(
-        name: '1989 Batwing', price: 200, image: 'assets/images/image12.jpg'),
-    Item(
-        name: '1989 Batwing', price: 200, image: 'assets/images/image12.jpg'),
-    Item(
-        name: '1989 Batwing', price: 200, image: 'assets/images/image12.jpg'),
-    Item(
-        name: '1989 Batwing', price: 200, image: 'assets/images/image12.jpg'),
-  ];
-
+  // List<Item> products = [
+  //   Item(
+  //       name: '1989 Batwing', price: 200, image: 'assets/images/image12.jpg'),
+  //   Item(
+  //       name: '1989 Batwing', price: 200, image: 'assets/images/image12.jpg'),
+  //   Item(
+  //       name: '1989 Batwing', price: 200, image: 'assets/images/image12.jpg'),
+  //   Item(
+  //       name: '1989 Batwing', price: 200, image: 'assets/images/image12.jpg'),
+  // ];
+  Future loadApiData() async{
+    try{
+      final response = await http.get(Uri.parse("https://ecommerce-acl-digital.herokuapp.com/product"));
+      if(response.statusCode == 200){
+        final jsonBody = json.decode(response.body);
+        final products = productsFromJson(jsonBody);
+        return products;
+      }
+    }
+    catch(e){
+      print(e);
+    }
+  }
+  @override void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadApiData().then((products){
+      productItems = products;
+    });
+  }
   //List<bool> clicked = List.generate(10, (index) => false, growable: true);
   @override
   Widget build(BuildContext context) {
@@ -39,20 +62,94 @@ class _ProductListState extends State<ProductList> {
         Cart(
           id: index,
           productId: index.toString(),
-          productName: products[index].name,
-          initialPrice: products[index].price,
-          productPrice: products[index].price,
+          productName: productItems[index].name,
+          initialPrice: productItems[index].price,
+          productPrice: productItems[index].price,
           quantity: ValueNotifier(1),
-          image: products[index].image,
+          image: 'assets/images/image12.jpg',
         ),
       )
           .then((value) {
-        cart.addTotalPrice(products[index].price.toDouble());
+        cart.addTotalPrice(productItems[index].price.toDouble());
         cart.addCounter();
         print('Product Added to cart');
       }).onError((error, stackTrace) {
         print(error.toString());
       });
+    }
+
+    Widget productCard(int index){
+      return InkWell(
+        onTap: () {
+          Navigator.of(context).pushNamed(Constants.ROUTE_PRODUCT_DETAIL);
+        },
+        child: Card(
+          color: Colors.white70,
+          elevation: 5.0,
+          child: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Image(
+                  height: 80,
+                  width: 80,
+                  image: AssetImage('assets/images/image12.jpg'),
+                ),
+                SizedBox(
+                  width: 130,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(
+                        height: 5.0,
+                      ),
+                      RichText(
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        text: TextSpan(
+                            style: TextStyle(
+                                color: Colors.blueGrey.shade800,
+                                fontSize: 16.0),
+                            children: [
+                              TextSpan(
+                                  text:
+                                  '${productItems[index].name.toString()}\n',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold)),
+                            ]),
+                      ),
+                      RichText(
+                        maxLines: 1,
+                        text: TextSpan(
+                            text: '' r"$",
+                            style: TextStyle(
+                                color: Colors.blueGrey.shade800,
+                                fontSize: 16.0),
+                            children: [
+                              TextSpan(
+                                  text:
+                                  '${productItems[index].price.toString()}\n',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold)),
+                            ]),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        primary: Colors.orangeAccent),
+                    onPressed: () {
+                      saveData(index);
+                    },
+                    child: const Text('Add to Cart')),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     return Scaffold(
@@ -89,79 +186,9 @@ class _ProductListState extends State<ProductList> {
       body: ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
           shrinkWrap: true,
-          itemCount: products.length,
+          itemCount: productItems.length,
           itemBuilder: (context, index) {
-            return InkWell(
-                onTap: () {
-                  Navigator.of(context).pushNamed(Constants.ROUTE_PRODUCT_DETAIL);
-                },
-            child: Card(
-              color: Colors.white70,
-              elevation: 5.0,
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Image(
-                      height: 80,
-                      width: 80,
-                      image: AssetImage(products[index].image.toString()),
-                    ),
-                    SizedBox(
-                      width: 130,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(
-                            height: 5.0,
-                          ),
-                          RichText(
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            text: TextSpan(
-                                style: TextStyle(
-                                    color: Colors.blueGrey.shade800,
-                                    fontSize: 16.0),
-                                children: [
-                                  TextSpan(
-                                      text:
-                                          '${products[index].name.toString()}\n',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                ]),
-                          ),
-                          RichText(
-                            maxLines: 1,
-                            text: TextSpan(
-                                text: '' r"$",
-                                style: TextStyle(
-                                    color: Colors.blueGrey.shade800,
-                                    fontSize: 16.0),
-                                children: [
-                                  TextSpan(
-                                      text:
-                                          '${products[index].price.toString()}\n',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                ]),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            primary: Colors.orangeAccent),
-                        onPressed: () {
-                          saveData(index);
-                        },
-                        child: const Text('Add to Cart')),
-                  ],
-                ),
-              ),
-            ),
-            );
+            return productCard(index);
           }),
     );
   }
